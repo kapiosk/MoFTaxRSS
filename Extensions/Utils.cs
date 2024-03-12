@@ -13,7 +13,7 @@ public static class Utils
     {
         List<T> records = [];
         using var reader = new StreamReader(path, true);
-        using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture) { MissingFieldFound = null });
+        using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture));
         csv.Read();
         csv.ReadHeader();
         while (csv.Read())
