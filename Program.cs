@@ -10,12 +10,13 @@ try
     var response = await httpClient.GetStringAsync("https://www.mof.gov.cy/mof/tax/taxdep.nsf/rssfeedgr.xml");
     response = response.Replace(" & ", " &amp; ").Replace("\n", "");
     var rss = response.DeserializeFromXML<Rss>();
-    List<FeedItem> items = "Data\\feed.csv".ReadFromCSV<FeedItem>();
+    var filePath = Path.Combine("Data", "feed.csv");
+    List<FeedItem> items = filePath.ReadFromCSV<FeedItem>();
     var count = items.Count;
     var newItems = rss?.Channel.Item.Select(i => new FeedItem(i.Title, i.Link, DateTime.Parse(i.PubDate).ToUniversalTime())).ToList();
     if (newItems is not null)
         items.AddRange(newItems);
-    items.OrderByDescending(c => c.PublishDate).Distinct().WriteCSV("Data\\feed.csv");
+    items.OrderByDescending(c => c.PublishDate).Distinct().WriteCSV(filePath);
     var NTFY_CHANNEL = Environment.GetEnvironmentVariable("NTFY_CHANNEL");
     if (count < items.Count)
     {
@@ -25,5 +26,5 @@ try
 }
 catch (Exception ex)
 {
-    File.AppendAllLines($"Data\\Exceptions.log", [ex.Message]);
+    File.AppendAllLines(Path.Combine("Data", "Exceptions.log"), [ex.Message]);
 }
