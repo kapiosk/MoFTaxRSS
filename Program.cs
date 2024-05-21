@@ -20,7 +20,7 @@ try
         items.AddRange(newItems);
     items.OrderByDescending(c => c.PublishDate).Distinct().WriteCSV(filePath);
     var NTFY_CHANNEL = Environment.GetEnvironmentVariable("NTFY_CHANNEL");
-    if (count < items.Count)
+    if (count < items.Distinct().Count())
     {
         if (!string.IsNullOrEmpty(NTFY_CHANNEL))
             await httpClient.PostAsync(NTFY_CHANNEL, new StringContent("New Announcement from Tax Department English", Encoding.UTF8, "application/x-www-form-urlencoded"));
@@ -63,7 +63,7 @@ try
         items.AddRange(newItems);
     items.OrderByDescending(c => c.PublishDate).Distinct().WriteCSV(filePath);
     var NTFY_CHANNEL = Environment.GetEnvironmentVariable("NTFY_CHANNEL");
-    if (count < items.Count)
+    if (count < items.Distinct().Count())
     {
         if (!string.IsNullOrEmpty(NTFY_CHANNEL))
             await httpClient.PostAsync(NTFY_CHANNEL, new StringContent("New Announcement from Tax Department Greek", Encoding.UTF8, "application/x-www-form-urlencoded"));
