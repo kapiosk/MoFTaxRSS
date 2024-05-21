@@ -13,7 +13,7 @@ public static class Utils
     {
         List<T> records = [];
         using var reader = new StreamReader(path, true);
-        using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture));
+        using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.CurrentCulture));
         csv.Read();
         csv.ReadHeader();
         while (csv.Read())
@@ -27,7 +27,7 @@ public static class Utils
     {
         using var stream = File.Open(path, FileMode.Append);
         using var writer = new StreamWriter(stream);
-        using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+        using var csv = new CsvWriter(writer, CultureInfo.CurrentCulture);
         csv.WriteRecords(records);
     }
 
