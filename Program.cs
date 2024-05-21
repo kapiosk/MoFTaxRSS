@@ -9,7 +9,7 @@ try
     var filePath = Path.Combine("Data", "feed_en.csv");
     List<FeedItem> items = filePath.ReadFromCSV<FeedItem>();
     var count = items.Count;
-    var newItems = feed.Items.Select(i => new FeedItem(i.Title.Text, i.Links[0].Uri.AbsoluteUri, i.PublishDate.UtcDateTime)).ToList();
+    var newItems = feed.Items.Select(i => new FeedItem(i.Title.Text, i.Links[0].Uri.AbsoluteUri, i.PublishDate.ToString())).ToList();
     if (newItems is not null)
         items.AddRange(newItems);
     items.OrderByDescending(c => c.PublishDate).Distinct().WriteCSV(filePath);
@@ -33,7 +33,7 @@ try
     var filePath = Path.Combine("Data", "feed_gr.csv");
     List<FeedItem> items = filePath.ReadFromCSV<FeedItem>();
     var count = items.Count;
-    var newItems = rss?.Channel.Item.Select(i => new FeedItem(i.Title, i.Link, DateTime.Parse(i.PubDate).ToUniversalTime())).ToList();
+    var newItems = rss?.Channel.Item.Select(i => new FeedItem(i.Title, i.Link, i.PubDate)).ToList();
     if (newItems is not null)
         items.AddRange(newItems);
     items.OrderByDescending(c => c.PublishDate).Distinct().WriteCSV(filePath);
