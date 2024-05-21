@@ -25,7 +25,7 @@ public static class Utils
 
     public static void WriteCSV<T>(this IEnumerable<T> records, string path)
     {
-        using var stream = File.Open(path, FileMode.Append);
+        using var stream = File.Open(path, FileMode.CreateNew);
         using var writer = new StreamWriter(stream);
         using var csv = new CsvWriter(writer, CultureInfo.CurrentCulture);
         csv.WriteRecords(records);
