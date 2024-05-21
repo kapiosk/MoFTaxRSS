@@ -2,6 +2,7 @@
 using MoFTaxRSS;
 
 using var httpClient = new HttpClient();
+Directory.CreateDirectory("Data");
 try
 {
     var response = await httpClient.GetStringAsync("https://www.mof.gov.cy/mof/tax/taxdep.nsf/rssfeed.xml");
