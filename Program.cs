@@ -1,10 +1,15 @@
 ﻿using System.Text;
 using MoFTaxRSS;
+//https://docs.ntfy.sh/publish/#__tabbed_3_4
+//https://mof.gov.cy/gr/%CF%84%CE%B5%CE%BB%CE%B5%CF%85%CF%84%CE%B1%CE%AF%CE%B1-%CE%BD%CE%AD%CE%B1
+// using var reader = System.Xml.XmlReader.Create("https://www.mof.gov.cy/mof/tax/taxdep.nsf/rssfeed.xml");
+// var feed = System.ServiceModel.Syndication.SyndicationFeed.Load(reader);
 
 using var httpClient = new HttpClient();
 var directory = "Data";
 Directory.CreateDirectory(directory);
 var NTFY_CHANNEL = Environment.GetEnvironmentVariable("NTFY_CHANNEL");
+var NTFY_EMAIL = Environment.GetEnvironmentVariable("NTFY_EMAIL");
 
 Dictionary<string, string> sites = new()
 {
@@ -31,26 +36,15 @@ foreach (var site in sites)
         {
             items.WriteCSV(filePath);
             if (!string.IsNullOrEmpty(NTFY_CHANNEL))
-                await httpClient.PostAsync(NTFY_CHANNEL, new StringContent($"New Announcement from Tax Department {site.Value}", Encoding.UTF8, "application/x-www-form-urlencoded"));
+            {
+                var content = new StringContent($"New Announcement from Tax Department {site.Value}", Encoding.UTF8, "application/x-www-form-urlencoded");
+                if (!string.IsNullOrEmpty(NTFY_EMAIL))
+                    content.Headers.Add("Email", NTFY_EMAIL);
+                await httpClient.PostAsync(NTFY_CHANNEL, content);
+            }
         }
     }
     catch (Exception ex)
     {
         File.AppendAllLines(Path.Combine("Data", "Exceptions.log"), [ex.Message]);
     }
-
-// using var reader = System.Xml.XmlReader.Create("https://www.mof.gov.cy/mof/tax/taxdep.nsf/rssfeed.xml");
-// var feed = System.ServiceModel.Syndication.SyndicationFeed.Load(reader);
-// var filePath = Path.Combine("Data", "feed_en.csv");
-// List<FeedItem> items = filePath.ReadFromCSV<FeedItem>();
-// var count = items.Count;
-// var newItems = feed.Items.Select(i => new FeedItem(i.Title.Text, i.Links[0].Uri.AbsoluteUri, i.PublishDate.UtcDateTime)).ToList();
-// if (newItems is not null)
-//     items.AddRange(newItems);
-// items.OrderByDescending(c => c.PublishDate).Distinct().WriteCSV(filePath);
-// var NTFY_CHANNEL = Environment.GetEnvironmentVariable("NTFY_CHANNEL");
-// if (count < items.Count)
-// {
-//     if (!string.IsNullOrEmpty(NTFY_CHANNEL))
-//         await httpClient.PostAsync(NTFY_CHANNEL, new StringContent("New Announcement from Tax Department English", Encoding.UTF8, "application/x-www-form-urlencoded"));
-// }
