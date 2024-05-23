@@ -10,6 +10,7 @@ var directory = "Data";
 Directory.CreateDirectory(directory);
 var NTFY_CHANNEL = Environment.GetEnvironmentVariable("NTFY_CHANNEL");
 var NTFY_EMAIL = Environment.GetEnvironmentVariable("NTFY_EMAIL");
+TimeZoneInfo cyprusTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Nicosia");
 
 Dictionary<string, string> sites = new()
 {
@@ -21,7 +22,8 @@ foreach (var site in sites)
     try
     {
         var response = await httpClient.GetStringAsync(site.Key);
-        var rss = response.Replace(" & ", " &amp; ").Replace("\n", "")
+        var rss = response.Replace(" & ", " &amp; ")
+                          .Replace("\n", "")
                           .DeserializeFromXML<Rss>() ?? throw new Exception("Failed to deserialize RSS feed");
         var filePath = Path.Combine(directory, site.Value);
         List<FeedItem> items;
@@ -29,18 +31,32 @@ foreach (var site in sites)
             items = filePath.ReadFromCSV<FeedItem>();
         else
             items = [];
-        var oldCount = items.Count;
-        var newItems = rss.Channel.Item.Select(i => new FeedItem(i.Title, i.Link, DateTime.Parse(i.PubDate).ToUniversalTime()));
-        items = items.Concat(newItems).OrderByDescending(c => c.PublishDate).Distinct().ToList();
-        if (oldCount < items.Count)
+        var newItems = rss.Channel.Item.Select(i => new FeedItem(i.Title, i.Link, DateTime.Parse(i.PubDate).ToUniversalTime()))
+                                       .Except(items);
+        if (newItems.Any())
         {
-            items.WriteCSV(filePath);
+            items.Concat(newItems).OrderByDescending(c => c.PublishDate).WriteCSV(filePath);
             if (!string.IsNullOrEmpty(NTFY_CHANNEL))
             {
-                var content = new StringContent($"New Announcement from Tax Department {site.Value}", Encoding.UTF8, "application/x-www-form-urlencoded");
-                if (!string.IsNullOrEmpty(NTFY_EMAIL))
-                    content.Headers.Add("Email", NTFY_EMAIL);
-                await httpClient.PostAsync(NTFY_CHANNEL, content);
+                foreach (var newItem in newItems)
+                {
+                    var content = new StringContent(
+                        string.Join(
+                            Environment.NewLine,
+                            newItem.Title,
+                            newItem.Link,
+                            TimeZoneInfo.ConvertTimeFromUtc(newItem.PublishDate, cyprusTimeZone)
+                        ),
+                        Encoding.UTF8,
+                        "application/x-www-form-urlencoded"
+                    );
+                    content.Headers.Add("Title", "MoFTaxRSS");
+                    content.Headers.Add("Click", newItem.Link);
+                    // content.Headers.Add("Priority", "4");
+                    if (!string.IsNullOrEmpty(NTFY_EMAIL))
+                        content.Headers.Add("Email", NTFY_EMAIL);
+                    await httpClient.PostAsync(NTFY_CHANNEL, content);
+                }
             }
         }
     }
