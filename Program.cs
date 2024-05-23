@@ -42,7 +42,7 @@ foreach (var site in sites)
                 {
                     var content = new StringContent(
                         string.Join(
-                            Environment.NewLine,
+                            "\n ",
                             newItem.Title,
                             newItem.Link,
                             TimeZoneInfo.ConvertTimeFromUtc(newItem.PublishDate, cyprusTimeZone)
