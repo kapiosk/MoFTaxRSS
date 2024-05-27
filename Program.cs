@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Text.RegularExpressions;
 using MoFTaxRSS;
 //https://docs.ntfy.sh/publish/#__tabbed_3_4
 //https://mof.gov.cy/gr/%CF%84%CE%B5%CE%BB%CE%B5%CF%85%CF%84%CE%B1%CE%AF%CE%B1-%CE%BD%CE%AD%CE%B1
@@ -15,7 +16,7 @@ TimeZoneInfo cyprusTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Nicosia"
 Dictionary<string, string> sites = new()
 {
     ["https://www.mof.gov.cy/mof/tax/taxdep.nsf/rssfeed.xml"] = "feed_en.csv",
-    ["https://www.mof.gov.cy/mof/tax/taxdep.nsf/rssfeedgr.xml"] = "feed_gr.csv"
+    ["https://www.mof.gov.cy/mof/tax/taxdep.nsf/rssfeedgr.xml"] = "feed_gr.csv",
 };
 
 foreach (var site in sites)
@@ -40,11 +41,26 @@ foreach (var site in sites)
             {
                 foreach (var newItem in newItems)
                 {
+                    var link = newItem.Link;
+                    try
+                    {
+                        var linkData = await httpClient.GetStringAsync(link);
+                        if (!string.IsNullOrEmpty(linkData))
+                        {
+                            Match match = RegexExtensions.PDFRegex().Match(linkData);
+                            if (match.Success)
+                                if (!match.Groups[1].Value.StartsWith("http"))
+                                    link = link[..(link.LastIndexOf('/') + 1)] + match.Groups[1].Value;
+                                else
+                                    link = match.Groups[1].Value;
+                        }
+                    }
+                    catch { }
                     var content = new StringContent(
                         string.Join(
                             "\n ",
                             newItem.Title,
-                            newItem.Link,
+                            link,
                             TimeZoneInfo.ConvertTimeFromUtc(newItem.PublishDate, cyprusTimeZone)
                         ),
                         Encoding.UTF8,
