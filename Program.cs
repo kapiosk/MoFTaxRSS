@@ -50,9 +50,9 @@ foreach (var site in sites)
                             Match match = RegexExtensions.PDFRegex().Match(linkData);
                             if (match.Success)
                                 if (!match.Groups[1].Value.StartsWith("http"))
-                                    link = link[..(link.LastIndexOf('/') + 1)] + match.Groups[1].Value;
+                                    link = link[..(link.LastIndexOf('/') + 1)] + match.Groups[1].Value.Replace(" ", "%20");
                                 else
-                                    link = match.Groups[1].Value;
+                                    link = match.Groups[1].Value.Replace(" ", "%20");
                         }
                     }
                     catch { }
